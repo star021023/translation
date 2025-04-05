@@ -1,0 +1,44 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/translation?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    username: root
+    password: yxy20021023qaz
+  session:
+    jdbc:
+      initialize-schema: always
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+
+  data:
+    redis:
+      database: 10
+      host: 127.0.0.1
+      port: 6379
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          max-wait: -1
+          min-idle: 0
+
+
+mybatis:
+  mapper-locations: classpath*:com/example/mapper/*.xml
+  type-aliases-package: com.example.translation.pojo.po
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+
+jwt:
+  secret-key: 7cQYJoeIs64WxpE3ow9ktxpcQXWVqJ50OhxXGeCy15RVn4SyiD0wSWQWKyiZyI/mZsis/UX6k4u/nZrhnSMjNw==
+
+
+aliyyun:
+  sms:
+    access-key: LTAI5tSNN6x7gECoN32pSTbZ
+    access-secret: 8tKXctOLUAg5DY5thHQknDFoF8vTsA

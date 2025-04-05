@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.translation.mapper.UserMapper">
+    <sql id="createUserTable">
+        CREATE TABLE IF NOT EXISTS User (
+             id BIGINT PRIMARY KEY,
+             username VARCHAR(255) NOT NULL UNIQUE,
+             password VARCHAR(255) NOT NULL,
+             name VARCHAR(255),
+             avatar VARCHAR(255),
+             phone VARCHAR(20),
+             createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP, -- 创建时间，默认当前时间
+             updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP -- 修改时间，默认当前时间并在更新时自动更新
+        );
+    </sql>
+
+    <insert id="insertUser" parameterType="com.example.translation.pojo.po.User">
+        INSERT INTO User (id, username, password, name, avatar, phone)
+        VALUES (#{id}, #{username}, #{password}, #{name}, #{avatar}, #{phone})
+    </insert>
+
+    <select id="checkUsernameOrPasswordExists" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM User WHERE username = #{username} Or password = #{password}
+    </select>
+
+    <select id="checkNameExists" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM User WHERE name = #{name}
+    </select>
+    <select id="checkUsernameAndPasswordExists" resultType="java.lang.Integer">
+        SELECT COUNT(*) FROM User WHERE username = #{username} And password = #{password}
+    </select>
+    <select id="findUserInfoByUsernameAndPassword" resultType="com.example.translation.pojo.po.User">
+        SELECT * FROM User WHERE username = #{username} AND password = #{password}
+    </select>
+
+</mapper>

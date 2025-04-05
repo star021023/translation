@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.translation.mapper.FavoritesMapper" >
+    <sql id="createFavoritesTable">
+        CREATE TABLE IF NOT EXISTS favorites (
+             id BIGINT PRIMARY KEY AUTO_INCREMENT,
+             userId BIGINT NOT NULL,
+             sourceLang TEXT NOT NULL,
+             targetLang TEXT NOT NULL,
+             sourceText TEXT NOT NULL,
+             targetText TEXT NOT NULL,
+             reflect TEXT NOT NULL,
+             reflectText TEXT NOT NULL,
+             createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+             updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+             FOREIGN KEY (userId) REFERENCES User(id) ON DELETE CASCADE
+        );
+    </sql>
+    <!-- 插入一条收藏记录 -->
+    <insert id="insertFavorites" parameterType="com.example.translation.pojo.po.Favorites"  useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO Favorites (userId, sourceText, targetText,sourceLang,targetLang,reflect,reflectText)
+        VALUES (#{userId}, #{sourceText}, #{targetText},#{sourceLang},#{targetLang},#{reflect},#{reflectText});
+    </insert>
+
+    <!-- 根据 ID 删除一条收藏记录 -->
+    <delete id="deleteFavoritesById" parameterType="long">
+        DELETE FROM Favorites WHERE id = #{id} and userId=#{userId};
+    </delete>
+
+    <!-- 更新一条收藏记录 -->
+    <update id="updateFavorites" parameterType="com.example.translation.pojo.po.Favorites">
+        UPDATE Favorites
+        SET userId = #{userId}, sourceText = #{sourceText}, targetText = #{targetText},sourceLang=#{sourceLang},targetLang=#{targetLang}
+        WHERE id = #{id};
+    </update>
+
+    <!-- 根据 ID 查询一条收藏记录 -->
+    <select id="selectFavoritesById" parameterType="long" resultType="com.example.translation.pojo.po.Favorites">
+        SELECT *
+        FROM Favorites
+        WHERE id = #{id};
+    </select>
+
+    <!-- 查询所有收藏记录 -->
+    <select id="selectAllFavorites" resultType="com.example.translation.pojo.vo.FavoriteVO">
+        SELECT id, sourceText, targetText, sourceLang,targetLang,reflect,reflectText,createTime,updateTime
+        FROM Favorites
+        WHERE userId = #{userId};
+    </select>
+    <!-- 根据 userId 和 targetText 或 sourceText 内容搜索历史记录 -->
+    <select id="selectFavoritesByUserIdAndText" resultType="com.example.translation.pojo.po.Favorites">
+        SELECT *
+        FROM Favorites
+        WHERE userId = #{userId}
+          AND (targetText LIKE CONCAT('%', #{text}, '%') OR sourceText LIKE CONCAT('%', #{text}, '%'));
+    </select>
+</mapper>

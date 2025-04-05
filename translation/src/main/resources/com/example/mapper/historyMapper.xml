@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.example.translation.mapper.HistoryMapper">
+    <sql id="createHistoryTable">
+        CREATE TABLE IF NOT EXISTS History (
+            id BIGINT PRIMARY KEY AUTO_INCREMENT,
+            userId BIGINT NOT NULL,
+            sourceLang TEXT NOT NULL,
+            targetLang TEXT NOT NULL,
+            sourceText TEXT NOT NULL,
+            targetText TEXT NOT NULL,
+            reflect TEXT NOT NULL,
+            reflectText TEXT NOT NULL,
+            createTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updateTime TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (userId) REFERENCES User(id) ON DELETE CASCADE
+        );
+    </sql>
+    <!-- 插入一条历史记录 -->
+    <insert id="insertHistory" parameterType="com.example.translation.pojo.po.History">
+        INSERT INTO History (userId, sourceText, targetText, sourceLang,targetLang,reflect,reflectText)
+        VALUES (#{userId}, #{sourceText}, #{targetText},#{sourceLang},#{targetLang},#{reflect},#{reflectText});
+    </insert>
+
+    <!-- 根据 ID 删除一条历史记录 -->
+    <delete id="deleteHistoryById" parameterType="long">
+        DELETE FROM History WHERE id = #{id} and userId=#{userId};
+    </delete>
+
+
+    <!-- 查询所有历史记录 -->
+    <select id="selectAllHistories" resultType="com.example.translation.pojo.vo.HistoryVO">
+        SELECT id, sourceText, targetText, sourceLang,targetLang,reflect,reflectText,createTime,updateTime
+        FROM History
+        WHERE userId = #{userId};
+    </select>
+    <!-- 根据 userId 和 targetText 或 sourceText 内容搜索历史记录 -->
+    <select id="searchHistories" resultType="com.example.translation.pojo.po.History">
+        SELECT *
+        FROM History
+        WHERE userId = #{userId}
+          AND (targetText LIKE CONCAT('%', #{text}, '%') OR sourceText LIKE CONCAT('%', #{text}, '%'));
+    </select>
+
+
+</mapper>
