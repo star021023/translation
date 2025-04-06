@@ -20,7 +20,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .addPathPatterns("/**")          // 拦截所有API接口
           .excludePathPatterns(                  //排除
                         "/login",                // 登录接口
-                        "/register"      // 注册接口
+                        "/register"  ,    // 注册接口
+                        "/genRandom"
                 );
     }
 }
