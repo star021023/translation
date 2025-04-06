@@ -119,18 +119,20 @@ public class UserServiceImpl implements com.example.translation.service.UserServ
         }
         return phoneNumber.matches(MOBILE_PATTERN);
     }
-    public  ResultData<String>  sendAliyunMsg(AliyunSms aliyunSms,String clientIp){
+
+    public ResultData sendAliyunMsg(AliyunSms aliyunSms, String clientIp){
         //检查同一IP10分钟内发送次数是否超限制
         String countKey = "ip_count:" + clientIp;
-        redisTemplate.opsForValue().get(countKey);//获取发送次数
-        Integer count = Integer.valueOf(redisTemplate.opsForValue().get(countKey));
-        if (count != null && count >= 3) {
-           return ResultData.fail(ReturnCode.RC1005.getCode(), ReturnCode.RC1005.getMessage());
+        String countStr = redisTemplate.opsForValue().get(countKey);
+        int count = (countStr == null) ? 0 : Integer.parseInt(countStr); // 处理null值
+
+        if (count >= 3) {
+            return ResultData.fail(ReturnCode.RC1005.getCode(), ReturnCode.RC1005.getMessage());
         }
-        count++;
-        // 增加发送次数
-        // redisTemplate.opsForValue().increment(String.valueOf(count), 1);
-        redisTemplate.opsForValue().set(countKey, String.valueOf(count), 10, TimeUnit.MINUTES);
+
+        // 增加计数并设置过期时间
+        redisTemplate.opsForValue().increment(countKey, 1);
+        redisTemplate.expire(countKey, 10, TimeUnit.MINUTES);
         // 使用工具类生成六位的数字验证码
         String  code = BaseUtil.getRandomCode(aliyunSms.getVerifySize());
         // 将redisTemplate模板对象的key的序列化方式修改为new StringRedisSerializer
@@ -141,9 +143,9 @@ public class UserServiceImpl implements com.example.translation.service.UserServ
         boolean flag = this.send(aliyunSms,code);
         // 根据信息是否发送成功，返回不同的内容
         if (flag){
-           return ResultData.success("验证码发送成功");
+            return ResultData.success("验证码发送成功");
         } else {
-            return ResultData.success("验证码发送失败");
+            return ResultData.fail(ReturnCode.RC999.getCode(),"验证码发送失败");
         }
     }
 
