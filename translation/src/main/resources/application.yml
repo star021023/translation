@@ -38,7 +38,7 @@ jwt:
   secret-key: 7cQYJoeIs64WxpE3ow9ktxpcQXWVqJ50OhxXGeCy15RVn4SyiD0wSWQWKyiZyI/mZsis/UX6k4u/nZrhnSMjNw==
 
 
-aliyyun:
+aliyun:
   sms:
-    access-key: LTAI5tSNN6x7gECoN32pSTbZ
-    access-secret: 8tKXctOLUAg5DY5thHQknDFoF8vTsA
+    access-key-id: LTAI5tSNN6x7gECoN32pSTbZ
+    access-key-secret: 8tKXctOLUAg5DY5thHQknDFoF8vTsA
