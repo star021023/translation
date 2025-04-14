@@ -47,7 +47,8 @@ public class FavoritesServiceImpl implements FavoritesService {
     }
 
     @Override
-    public List<Favorites> selectFavoritesByUserIdAndText(Long userId, String text) {
+    public List<FavoriteVO> searchFavorites(String text) {
+        Long userId = UserContext.getUserId();
         return favoritesMapper.selectFavoritesByUserIdAndText(userId, text);
     }
 }

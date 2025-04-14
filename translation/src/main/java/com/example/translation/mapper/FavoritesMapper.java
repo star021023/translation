@@ -12,5 +12,5 @@ public interface FavoritesMapper {
     int updateFavorites(Favorites favorites);
     Favorites selectFavoritesById(long id);
     List<FavoriteVO> selectAllFavorites(long userId);
-    List<Favorites> selectFavoritesByUserIdAndText(Long userId, String text);
+    List<FavoriteVO> selectFavoritesByUserIdAndText(Long userId, String text);
 }

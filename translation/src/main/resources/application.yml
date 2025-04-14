@@ -14,6 +14,7 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
 
+
   data:
     redis:
       database: 10
@@ -42,3 +43,15 @@ aliyun:
   sms:
     access-key-id: LTAI5tSNN6x7gECoN32pSTbZ
     access-key-secret: 8tKXctOLUAg5DY5thHQknDFoF8vTsA
+  oss:
+    file:
+      endpoint: oss-cn-hangzhou.aliyuncs.com
+      keyid: LTAI5tFk9M5LJDCLYgJL82Dq
+      keysecret: eUiHCa8ccZSR0lGqFqgoyUBhR1jvkG
+      bucketname: yanxingyu
+
+file:
+  upload:
+    img-dir: C:/Users/yxy/PycharmProjects/pythonProject/app/img  # 路径
+    allowed-types: image/jpeg,image/png,image/gif  # 允许的图片类型
+

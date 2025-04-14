@@ -9,4 +9,11 @@ public interface UserMapper {
     Integer checkUsernameAndPasswordExists(String username, String password);
     Integer checkNameExists(String name);
     User findUserInfoByUsernameAndPassword(String username,String password);
+    User findUserByPhone(String phoneNumber);
+    User findUserById(Long id);
+    // 更新用户名
+    void updateUserName(Long userId,String newName);
+    void updateAvatar(Long userId,String avatar);
+
+    void updatePassword(String password,Long id);
 }

@@ -1,7 +1,9 @@
 package com.example.translation.service.impl;
 
+import com.example.translation.common.Interceptor.UserContext;
 import com.example.translation.mapper.HistoryMapper;
 import com.example.translation.pojo.dto.DataChunk;
+import com.example.translation.pojo.dto.ImgTranslDTO;
 import com.example.translation.pojo.dto.TranslateRequestDTO;
 import com.example.translation.pojo.po.History;
 import com.example.translation.service.TranslateService;
@@ -59,7 +61,6 @@ public class TranslateServiceImpl implements TranslateService {
     @Override
     public Flux<ServerSentEvent<DataChunk>> translate(TranslateRequestDTO dto, HttpServletRequest request) {
         Long userId = (Long) request.getAttribute("userId");
-        System.out.println(request);
         // 定义两个缓冲区分别存储不同阶段内容
         StringBuilder targetText = new StringBuilder();
         StringBuilder reflect = new StringBuilder();
@@ -87,11 +88,41 @@ public class TranslateServiceImpl implements TranslateService {
                         userId
                 ));
     }
+    @Override
+    public Flux<ServerSentEvent<DataChunk>> imgTranslate(ImgTranslDTO imgTranslDTO) {
+        Long userId = UserContext.getUserId();
+        // 定义两个缓冲区分别存储不同阶段内容
+        StringBuilder targetText = new StringBuilder();
+        StringBuilder reflect = new StringBuilder();
+        StringBuilder reflectText = new StringBuilder();
+        return webClient.post()
+                .uri("/imgTransl")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.TEXT_EVENT_STREAM)
+                .bodyValue(buildImgRequestBody(imgTranslDTO))
+                .retrieve()
+                .bodyToFlux(DataChunk.class)
+                .doOnNext(chunk -> {
+                    switch (chunk.getStage()) {
+                        case "first" -> targetText.append(chunk.getChunk());
+                        case "reflect" -> reflect.append(chunk.getChunk());
+                        case "improve" -> reflectText.append(chunk.getChunk());
+                    }
+                })
+                .map(chunk -> ServerSentEvent.builder(chunk).build());
+    }
     private Map<String, Object> buildRequestBody(TranslateRequestDTO dto) {
         return Map.of(
                 "sourceLanguage", dto.getSourceLanguage(),
                 "targetLanguage", dto.getTargetLanguage(),
                 "sourceText", dto.getSourceText()
+        );
+    }
+    private Map<String, Object> buildImgRequestBody(ImgTranslDTO imgTranslDTO) {
+        return Map.of(
+                "sourceLanguage", imgTranslDTO.getSourceLanguage(),
+                "targetLanguage", imgTranslDTO.getTargetLanguage(),
+                "imgPath", imgTranslDTO.getImgPath()
         );
     }
     private void saveHistory(TranslateRequestDTO dto,
@@ -114,5 +145,4 @@ public class TranslateServiceImpl implements TranslateService {
                 .retry(1) // 失败重试
                 .subscribe();
     }
-
 }

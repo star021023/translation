@@ -10,6 +10,7 @@ import com.aliyuncs.exceptions.ClientException;
 import com.aliyuncs.exceptions.ServerException;
 import com.aliyuncs.http.MethodType;
 import com.aliyuncs.profile.DefaultProfile;
+import com.example.translation.common.Interceptor.UserContext;
 import com.example.translation.common.config.AliyunConstant;
 import com.example.translation.common.result.ResultData;
 import com.example.translation.common.result.ReturnCode;
@@ -18,9 +19,11 @@ import com.example.translation.common.util.JwtUtil;
 import com.example.translation.common.util.SnowflakeIdGenerator;
 import com.example.translation.mapper.UserMapper;
 import com.example.translation.pojo.dto.AliyunSms;
+import com.example.translation.pojo.dto.RegisterDTO;
 import com.example.translation.pojo.po.SmsLogin;
 import com.example.translation.pojo.po.User;
 import com.example.translation.pojo.vo.UserVO;
+import com.example.translation.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -32,7 +35,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 @Service
-public class UserServiceImpl implements com.example.translation.service.UserService {
+public class UserServiceImpl implements UserService {
     @Autowired
     private UserMapper userMapper;
 
@@ -49,7 +52,22 @@ public class UserServiceImpl implements com.example.translation.service.UserServ
     private String accessKeySecret;
 
     @Override
-    public ResultData<String> registerUser(String username, String password) {
+    public ResultData<String> registerUser(RegisterDTO registerDTO) {
+        String username=registerDTO.getUsername();
+        String password=registerDTO.getPassword();
+        String phoneNumber=registerDTO.getPhoneNumber();
+        String verifyCode=registerDTO.getVerifyCode();
+        // 2. 从Redis获取存储的验证码
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        String storedCode = redisTemplate.opsForValue().get(phoneNumber);
+
+        // 3. 验证码比对
+        if (storedCode == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "验证码已过期");
+        }
+        if (!storedCode.equals(verifyCode)) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "验证码错误");
+        }
         if (userMapper.checkUsernameOrPasswordExists(username,password)> 0) {
             return ResultData.fail(ReturnCode.RC999.getCode(), "账号或密码已存在");
         }
@@ -58,6 +76,7 @@ public class UserServiceImpl implements com.example.translation.service.UserServ
         user.setUsername(username);
         user.setPassword(password);
         user.setName(generateUniqueName());
+        user.setPhone(phoneNumber);
         userMapper.insertUser(user);
         return ResultData.success("注册成功");
     }
@@ -74,9 +93,48 @@ public class UserServiceImpl implements com.example.translation.service.UserServ
         // 生成 token
         String token = JwtUtil.generateToken(user.getId(), user.getName());
         UserVO userVO =new UserVO();
+        userVO.setPhoneNumber(user.getPhone());
         userVO.setName(user.getName());
         userVO.setAvatar(user.getAvatar());
         userVO.setToken(token);
+        return ResultData.success(userVO);
+    }
+
+    @Override
+    public ResultData<UserVO>  phoneLogin(String phoneNumber, String verifyCode) {
+        //  参数校验
+        if (phoneNumber == null || phoneNumber.trim().isEmpty()) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "手机号不能为空");
+        }
+        if (verifyCode == null || verifyCode.trim().isEmpty()) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "验证码不能为空");
+        }
+        if (!isMobile(phoneNumber)) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "手机号格式错误");
+        }
+        //验证码校验
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        String storedCode = redisTemplate.opsForValue().get(phoneNumber);
+        if (storedCode == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "验证码已过期");
+        }
+        if (!storedCode.equals(verifyCode)) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "验证码错误");
+        }
+        //检查用户是否存在
+        User user = userMapper.findUserByPhone(phoneNumber);
+        if (user == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(),"用户不存在");
+        }
+        //生成token并返回用户信息
+        String token = JwtUtil.generateToken(user.getId(), user.getName());
+        UserVO userVO = new UserVO();
+        userVO.setPhoneNumber(user.getPhone());
+        userVO.setName(user.getName());
+        userVO.setAvatar(user.getAvatar());
+        userVO.setToken(token);
+        //验证成功后删除验证码（防止重复使用）
+        redisTemplate.delete(phoneNumber);
         return ResultData.success(userVO);
     }
 
@@ -200,6 +258,57 @@ public class UserServiceImpl implements com.example.translation.service.UserServ
             e.printStackTrace();
         }
         return false;
+    }
+
+    @Override
+    public ResultData<UserVO> updateName( String newName) {
+        Long userId = UserContext.getUserId();
+        //参数校验
+        if (newName == null || newName.trim().isEmpty()) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户名不能为空");
+        }
+        if (newName.length() > 9) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户名不能超过9个字符");
+        }
+        // 检查用户名是否已存在
+        if (userMapper.checkNameExists(newName) > 0) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "该用户名已被使用");
+        }
+        // 更新用户名
+        User user = userMapper.findUserById(userId);
+        if (user == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户不存在");
+        }
+        userMapper.updateUserName(userId, newName);
+        // 4. 生成新的token（因为token中包含用户名）
+        String newToken = JwtUtil.generateToken(user.getId(), newName);
+        // 5. 返回更新后的用户信息
+        UserVO userVO = new UserVO();
+        userVO.setName(newName);
+        userVO.setPhoneNumber(user.getPhone());
+        userVO.setAvatar(user.getAvatar());
+        userVO.setToken(newToken);
+        return ResultData.success(userVO);
+    }
+    @Override
+    public ResultData<String> resetPasswordBySms(String phoneNumber, String verifyCode, String newPassword) {
+        //验证码校验
+        redisTemplate.setKeySerializer(new StringRedisSerializer());
+        String storedCode = redisTemplate.opsForValue().get(phoneNumber);
+        if (storedCode == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "验证码已过期");
+        }
+        if (!storedCode.equals(verifyCode)) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "验证码错误");
+        }
+        //查找用户
+        User user = userMapper.findUserByPhone(phoneNumber);
+        if (user == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户不存在");
+        }
+        Long id = user.getId();
+        userMapper.updatePassword(newPassword,id);
+        return ResultData.success("密码修改成功");
     }
 }
 

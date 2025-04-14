@@ -21,7 +21,9 @@ public class WebConfig implements WebMvcConfigurer {
           .excludePathPatterns(                  //排除
                         "/login",                // 登录接口
                         "/register"  ,    // 注册接口
-                        "/genRandom"
+                        "/genRandom",
+                        "/phoneLogin",
+                        "/resetPassword"
                 );
     }
 }

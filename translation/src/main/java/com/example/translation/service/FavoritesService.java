@@ -19,5 +19,6 @@ public interface FavoritesService {
 
     List<FavoriteVO> selectAllFavorites();
 
-    List<Favorites> selectFavoritesByUserIdAndText(Long userId, String text);
+
+    List<FavoriteVO> searchFavorites(String text);
 }
