@@ -20,7 +20,6 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -56,9 +55,7 @@ public class UploadFileImpl implements UploadFile {
         // 创建OSSClient实例
         OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
         try {
-            //获取上传文件输入流*/
             InputStream inputStream = multipartFile.getInputStream();
-            // 获取文件扩展名
             String originalFilename = multipartFile.getOriginalFilename();
             String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
             // 使用userId作为文件名

@@ -29,4 +29,36 @@
             note = #{note}
         WHERE id = #{id}
     </update>
+    <!-- 平行语料的增删查改 -->
+    <select id="selectAllParallelCorpus" resultType="com.example.translation.pojo.po.ParallelCorpus">
+        SELECT * FROM parallelCorpus
+    </select>
+    <select id="searchParallelCorpus" resultType="com.example.translation.pojo.po.ParallelCorpus">
+        SELECT * FROM parallelCorpus
+        WHERE
+        <if test="keywords != null">
+            (chinese LIKE CONCAT('%', #{keywords}, '%') OR english LIKE CONCAT('%', #{keywords}, '%'))
+        </if>
+    </select>
+    <delete id="deleteParallelCorpus" parameterType="int">
+        delete FROM parallelCorpus where id = #{id}
+    </delete>
+    <insert id="insertParallelCorpus" parameterType="com.example.translation.pojo.po.ParallelCorpus">
+        INSERT INTO parallelCorpus(chinese, english)
+        VALUES(#{chinese}, #{english})
+    </insert>
+    <update id="updateParallelCorpus" parameterType="com.example.translation.pojo.po.ParallelCorpus">
+        UPDATE parallelCorpus
+        SET
+            chinese = #{chinese},
+            english = #{english}
+        WHERE id = #{id}
+    </update>
+    <insert id="batchInsertParallelCorpus" parameterType="java.util.List">
+        INSERT INTO parallelcorpus(chinese, english)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.chinese}, #{item.english})
+        </foreach>
+    </insert>
 </mapper>

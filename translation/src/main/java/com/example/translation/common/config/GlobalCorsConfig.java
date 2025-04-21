@@ -11,7 +11,6 @@ public class GlobalCorsConfig {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-
         // 允许来自http://localhost:5173的请求
         config.addAllowedOrigin("http://localhost:5173");
         config.setAllowCredentials(true); // 允许发送凭证（如cookies）
