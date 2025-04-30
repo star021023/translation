@@ -8,10 +8,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 
 @RestController
@@ -33,6 +30,21 @@ public class TranslateController {
                 .onErrorResume(e -> Flux.just(
                         ServerSentEvent.builder(ResultData.<DataChunk>fail(500, e.getMessage())).build()
                 ));
+    }
+
+    @GetMapping("/blueScore")
+    public  ResultData<String> bleuScore(@RequestParam String reference,@RequestParam String candidate){
+        return translateService.blueScore(reference,candidate);
+    }
+
+    @GetMapping("/chart")
+    public ResultData bleuScoreChart(){
+        return translateService.bleuScoreChart();
+    }
+
+    @PostMapping("/refresh")
+    public ResultData reFresh(){
+        return translateService.refreshChart();
     }
 }
 

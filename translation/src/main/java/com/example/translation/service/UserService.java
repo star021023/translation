@@ -16,11 +16,15 @@ public interface UserService {
     ResultData<UserVO>  login(String username, String password);
 
 
+    ResultData<UserVO>  adminLogin(String username, String password);
+
     ResultData<UserVO>  phoneLogin(String phoneNumber, String verifyCode);
 
     ResultData<String> genRandom(SmsLogin smsLogin, String clientIp);
 
     ResultData<UserVO> updateName(String newName);
+
+    ResultData<UserVO> updateAdminName(String newName);
 
     ResultData<String> resetPasswordBySms(String phoneNumber, String verifyCode, String newPassword);
 }

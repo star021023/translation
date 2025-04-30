@@ -11,5 +11,10 @@ public interface UploadFile {
 
     ResultData<UserVO> uploadFileAvatar(MultipartFile multipartFile);
 
+    ResultData<UserVO> uploadAdminAvatar(MultipartFile multipartFile);
+
     Flux<ServerSentEvent<DataChunk>> imgUpload(String sourceLanguage, String targetLanguage, MultipartFile multipartFile);
+
+
+    ResultData<String> uploadWord(String sourceLanguage, String targetLanguage, MultipartFile multipartFile);
 }

@@ -28,6 +28,16 @@ public class UploadController {
         return uploadFile.uploadFileAvatar(file);
     }
 
+    @PostMapping(value = "/admin/avatar" , consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResultData<UserVO> uploadAdminFile(@RequestParam("file") @RequestBody MultipartFile file){
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename == null ||
+                !originalFilename.matches(".*\\.(jpg|jpeg|png|gif|bmp)$")) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "仅支持jpg/jpeg/png/gif/bmp格式图片");
+        }
+        return uploadFile.uploadAdminAvatar(file);
+    }
+
 
     @PostMapping(value = "/image", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public Flux<ServerSentEvent<ResultData<DataChunk>>> uploadImage(@RequestParam("sourceLanguage") String sourceLanguage,
@@ -44,4 +54,12 @@ public class UploadController {
                         ServerSentEvent.builder(ResultData.<DataChunk>fail(500, e.getMessage())).build()
                 ));
     }
+
+    @PostMapping(value = "/word", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResultData<String> uploadWord(@RequestParam("sourceLanguage") String sourceLanguage,
+                                 @RequestParam("targetLanguage") String targetLanguage,
+                                 @RequestParam("file") MultipartFile file){
+        return uploadFile.uploadWord(sourceLanguage,targetLanguage,file);
+    }
+
 }

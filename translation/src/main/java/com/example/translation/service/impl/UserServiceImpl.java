@@ -17,6 +17,7 @@ import com.example.translation.common.result.ReturnCode;
 import com.example.translation.common.util.BaseUtil;
 import com.example.translation.common.util.JwtUtil;
 import com.example.translation.common.util.SnowflakeIdGenerator;
+import com.example.translation.mapper.AdminMapper;
 import com.example.translation.mapper.UserMapper;
 import com.example.translation.pojo.dto.AliyunSms;
 import com.example.translation.pojo.dto.RegisterDTO;
@@ -43,6 +44,8 @@ public class UserServiceImpl implements UserService {
     private SnowflakeIdGenerator snowflakeIdGenerator;
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
+    @Autowired
+    private AdminMapper adminMapper;
     private Random random = new Random();
     private static final String MOBILE_PATTERN = "^1[3-9]\\d{9}$";
     @Value("${aliyun.sms.access-key-id}")
@@ -98,6 +101,32 @@ public class UserServiceImpl implements UserService {
         userVO.setAvatar(user.getAvatar());
         userVO.setToken(token);
         return ResultData.success(userVO);
+    }
+    @Override
+    public ResultData<UserVO>  adminLogin(String username, String password) {
+        if (username == null || username.trim().isEmpty()) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户名不能为空");
+        }
+        if (password == null || password.trim().isEmpty()) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "密码不能为空");
+        }
+        if (adminMapper.checkAdminCredentials(username, password) == 0) {
+            return ResultData.fail(ReturnCode.USERNAME_OR_PASSWORD_ERROR.getCode(),
+                    ReturnCode.USERNAME_OR_PASSWORD_ERROR.getMessage());
+        }
+        User admin = adminMapper.findAdminByUsername(username);
+        if (admin == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "管理员不存在");
+        }
+        String token = JwtUtil.generateToken(admin.getId(), admin.getName());
+        UserVO userVO = new UserVO();
+        userVO.setName(admin.getName());
+        userVO.setAvatar(admin.getAvatar());
+        userVO.setToken(token);
+        userVO.setAdmin(true);
+        userVO.setPhoneNumber(admin.getPhone());
+        return ResultData.success(userVO);
+
     }
 
     @Override
@@ -288,6 +317,37 @@ public class UserServiceImpl implements UserService {
         userVO.setPhoneNumber(user.getPhone());
         userVO.setAvatar(user.getAvatar());
         userVO.setToken(newToken);
+        return ResultData.success(userVO);
+    }
+    @Override
+    public ResultData<UserVO> updateAdminName(String newName) {
+        Long userId = UserContext.getUserId();
+        //参数校验
+        if (newName == null || newName.trim().isEmpty()) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户名不能为空");
+        }
+        if (newName.length() > 9) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户名不能超过9个字符");
+        }
+        // 检查用户名是否已存在
+        if (adminMapper.checkNameExists(newName) > 0) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "该用户名已被使用");
+        }
+        // 更新用户名
+        User user = adminMapper.findAdminById(userId);
+        if (user == null) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "用户不存在");
+        }
+        adminMapper.updateAdminName(userId, newName);
+        //生成新的token（因为token中包含用户名）
+        String newToken = JwtUtil.generateToken(user.getId(), newName);
+        //返回更新后的用户信息
+        UserVO userVO = new UserVO();
+        userVO.setName(newName);
+        userVO.setPhoneNumber(user.getPhone());
+        userVO.setAvatar(user.getAvatar());
+        userVO.setToken(newToken);
+        userVO.setAdmin(true);
         return ResultData.success(userVO);
     }
     @Override

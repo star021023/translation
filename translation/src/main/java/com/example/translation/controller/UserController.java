@@ -29,6 +29,10 @@ public class UserController {
     public ResultData<UserVO> login(@RequestBody AccountDTO accountDTO){
         return userService.login(accountDTO.getUsername(), accountDTO.getPassword());
     }
+    @PostMapping("/admin/login")
+    public ResultData<UserVO> adminLogin(@RequestBody AccountDTO accountDTO){
+        return userService.adminLogin(accountDTO.getUsername(), accountDTO.getPassword());
+    }
 
     @PostMapping( "/genRandom")
     public ResultData<String> genRandom(@RequestBody SmsLogin smsLogin, HttpServletRequest request) throws Exception {
@@ -42,6 +46,10 @@ public class UserController {
     @PutMapping("/updateName")
     public ResultData<UserVO> updateName(@RequestBody Map<String, String> request){
         return userService.updateName(request.get("name"));
+    }
+    @PutMapping("/admin/updateName")
+    public ResultData<UserVO> updateAdminName(@RequestBody Map<String, String> request){
+        return userService.updateAdminName(request.get("name"));
     }
     @PutMapping("/resetPassword")
     public ResultData<String> resetPasswordBySms(@RequestBody ResetPasswordDTO resetPasswordDTO) {

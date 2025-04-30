@@ -14,4 +14,13 @@ public interface TranslateService {
     Flux<ServerSentEvent<DataChunk>> translate(TranslateRequestDTO dto, HttpServletRequest request);
 
     Flux<ServerSentEvent<DataChunk>> imgTranslate(ImgTranslDTO imgTranslDTO);
+
+
+    ResultData<String> docTranslate(ImgTranslDTO imgTranslDTO);
+
+    ResultData<String> blueScore(String reference, String candidate);
+
+    ResultData bleuScoreChart();
+
+    ResultData refreshChart();
 }

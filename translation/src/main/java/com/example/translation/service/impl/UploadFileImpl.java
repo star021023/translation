@@ -7,6 +7,7 @@ import com.example.translation.common.result.ResultData;
 import com.example.translation.common.result.ReturnCode;
 import com.example.translation.common.util.ConstantPropertiesUtil;
 import com.example.translation.common.util.JwtUtil;
+import com.example.translation.mapper.AdminMapper;
 import com.example.translation.mapper.UserMapper;
 import com.example.translation.pojo.dto.DataChunk;
 import com.example.translation.pojo.dto.ImgTranslDTO;
@@ -33,6 +34,8 @@ import java.util.UUID;
 public class UploadFileImpl implements UploadFile {
     @Autowired
     private UserMapper userMapper;
+    @Autowired
+    private AdminMapper adminMapper;
     @Autowired
     private TranslateService translateService;
 
@@ -81,6 +84,45 @@ public class UploadFileImpl implements UploadFile {
             }
         }
     }
+
+    @Override
+    public ResultData<UserVO> uploadAdminAvatar(MultipartFile multipartFile) {
+        Long userId = UserContext.getUserId();
+        String endpoint = ConstantPropertiesUtil.END_POINT;
+        String accessKeyId = ConstantPropertiesUtil.KEY_ID;
+        String accessKeySecret = ConstantPropertiesUtil.KEY_SECRET;
+        // 填写Bucket名称
+        String bucketName = ConstantPropertiesUtil.BUCKET_NAME;
+        // 创建OSSClient实例
+        OSS ossClient = new OSSClientBuilder().build(endpoint, accessKeyId, accessKeySecret);
+        try {
+            InputStream inputStream = multipartFile.getInputStream();
+            String originalFilename = multipartFile.getOriginalFilename();
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf("."));
+            // 使用userId作为文件名
+            String filename = userId + fileExtension;
+            //调用oss方法实现上传
+            ossClient.putObject(bucketName, filename, inputStream);
+            String url = "https://".concat(bucketName).concat(".").concat(endpoint).concat("/").concat(filename);
+            adminMapper.updateAvatar(userId,url);
+            User user=adminMapper.findAdminById(userId);
+            UserVO userVO = new UserVO();
+            String newToken = JwtUtil.generateToken(user.getId(), user.getName());
+            userVO.setToken(newToken);
+            userVO.setName(user.getName());
+            userVO.setPhoneNumber(user.getPhone());
+            userVO.setAvatar(user.getAvatar());
+            userVO.setAdmin(true);
+            return ResultData.success(userVO);
+        }catch (Exception e){
+            e.printStackTrace();
+            return null;
+        }finally {
+            if (ossClient != null) {
+                ossClient.shutdown();
+            }
+        }
+    }
     @Override
     public Flux<ServerSentEvent<DataChunk>> imgUpload(String sourceLanguage, String targetLanguage, MultipartFile multipartFile) {
         try {
@@ -119,6 +161,32 @@ public class UploadFileImpl implements UploadFile {
                     .event("error")
                     .data(new DataChunk("error", ReturnCode.RC999.getCode(), "图片上传失败"))
                     .build());
+        }
+    }
+
+    @Override
+    public ResultData<String> uploadWord(String sourceLanguage, String targetLanguage, MultipartFile multipartFile){
+        try {
+            String originalFilename = multipartFile.getOriginalFilename();
+            String fileExtension = originalFilename.substring(originalFilename.lastIndexOf(".")).toLowerCase();
+            if (!Arrays.asList(".doc", ".docx").contains(fileExtension)) {
+                return ResultData.fail(ReturnCode.RC999.getCode(), "仅支持DOC/DOCX文件");
+            }
+            File uploadDir = new File(imgDir);
+            if (!uploadDir.exists()) {
+                uploadDir.mkdirs();
+            }
+            String newFilename = UUID.randomUUID() + fileExtension;
+            Path filePath = Paths.get(imgDir, newFilename);
+            multipartFile.transferTo(filePath);
+            String docPath = imgDir+ "/" + newFilename;
+            ImgTranslDTO dto = new ImgTranslDTO();
+            dto.setSourceLanguage(sourceLanguage);
+            dto.setTargetLanguage(targetLanguage);
+            dto.setImgPath(docPath);
+            return translateService.docTranslate(dto);
+        } catch (Exception  e) {
+            return ResultData.fail(ReturnCode.RC999.getCode(), "文档处理失败: " + e.getMessage());
         }
     }
 }

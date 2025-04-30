@@ -23,7 +23,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "/register"  ,    // 注册接口
                         "/genRandom",
                         "/phoneLogin",
-                        "/resetPassword"
+                        "/resetPassword",
+                        "/admin/login"
                 );
     }
 }

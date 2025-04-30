@@ -7,4 +7,5 @@ public class TranslateRequestDTO {
    private String sourceLanguage;
    private String targetLanguage;
    private String sourceText;
+   private boolean termbases;
 }

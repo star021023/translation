@@ -1,6 +1,8 @@
 package com.example.translation.service.impl;
 
 import com.example.translation.common.Interceptor.UserContext;
+import com.example.translation.common.result.ResultData;
+import com.example.translation.mapper.BleuResultMapper;
 import com.example.translation.mapper.HistoryMapper;
 import com.example.translation.pojo.dto.DataChunk;
 import com.example.translation.pojo.dto.ImgTranslDTO;
@@ -24,12 +26,15 @@ import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 
 import java.time.Duration;
+import java.util.List;
 import java.util.Map;
 @Slf4j
 @Service
 public class TranslateServiceImpl implements TranslateService {
     @Autowired
     private HistoryMapper historyMapper;
+    @Autowired
+    private BleuResultMapper bleuResultMapper;
     private final WebClient webClient;
 
     public TranslateServiceImpl(WebClient.Builder webClientBuilder) {
@@ -111,11 +116,30 @@ public class TranslateServiceImpl implements TranslateService {
                 })
                 .map(chunk -> ServerSentEvent.builder(chunk).build());
     }
+    @Override
+    public ResultData<String> docTranslate(ImgTranslDTO imgTranslDTO) {
+        return webClient.post()
+                .uri("/wordTransl")
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(buildImgRequestBody(imgTranslDTO))
+                .retrieve()
+                .bodyToMono(String.class)  // Assuming Flask returns just the filename as String
+                .map(filename -> {
+                    // 构建完整的下载URL
+                    String downloadUrl = "http://127.0.0.1:5000/download?filename=" + filename;
+                    return ResultData.success(downloadUrl);
+                })
+                .onErrorResume(e -> Mono.just(ResultData.fail(500, "文档翻译失败: " + e.getMessage())))
+                .block();
+    }
+
     private Map<String, Object> buildRequestBody(TranslateRequestDTO dto) {
         return Map.of(
                 "sourceLanguage", dto.getSourceLanguage(),
                 "targetLanguage", dto.getTargetLanguage(),
-                "sourceText", dto.getSourceText()
+                "sourceText", dto.getSourceText(),
+                "termbases",dto.isTermbases()
         );
     }
     private Map<String, Object> buildImgRequestBody(ImgTranslDTO imgTranslDTO) {
@@ -144,5 +168,48 @@ public class TranslateServiceImpl implements TranslateService {
                 .doOnError(e -> log.error("历史记录保存失败", e))
                 .retry(1) // 失败重试
                 .subscribe();
+    }
+
+    @Override
+    public ResultData<String> blueScore(String reference, String candidate){
+        return webClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/bleuscore")
+                        .queryParam("reference", reference)
+                        .queryParam("candidate", candidate)
+                        .build())
+                .retrieve()
+                .bodyToMono(String.class)
+                .map(ResultData::success)
+                .block();
+    }
+
+
+    @Override
+    public ResultData bleuScoreChart(){
+        List<Double> firstTransl0=bleuResultMapper.selectFirstScores0();
+        List<Double> secondTransl0=bleuResultMapper.selectImproveScores0();
+        List<Double> firstTransl1=bleuResultMapper.selectFirstScores1();
+        List<Double> secondTransl1=bleuResultMapper.selectImproveScores1();
+        return ResultData.success(Map.of(
+                "firstTransl0", firstTransl0,
+                "secondTransl0", secondTransl0,
+                "firstTransl1", firstTransl1,
+                "secondTransl1", secondTransl1,
+                "AllCount", firstTransl0.size()
+        ));
+    }
+
+    @Override
+    public ResultData refreshChart() {
+        try {
+            return webClient.get()
+                    .uri("/getChart")
+                    .retrieve()
+                    .bodyToMono(ResultData.class)
+                    .block();
+        } catch (Exception e) {
+            return ResultData.fail(500, "更新错误 " + e.getMessage());
+        }
     }
 }

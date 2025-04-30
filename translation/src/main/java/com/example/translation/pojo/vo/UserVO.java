@@ -8,4 +8,5 @@ public class UserVO {
     private String avatar;
     private String token;
     private String phoneNumber;
+    private boolean Admin;
 }
