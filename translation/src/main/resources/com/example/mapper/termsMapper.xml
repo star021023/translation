@@ -31,24 +31,24 @@
     </update>
     <!-- 平行语料的增删查改 -->
     <select id="selectAllParallelCorpus" resultType="com.example.translation.pojo.po.ParallelCorpus">
-        SELECT * FROM parallelCorpus
+        SELECT * FROM parallelcorpus
     </select>
     <select id="searchParallelCorpus" resultType="com.example.translation.pojo.po.ParallelCorpus">
-        SELECT * FROM parallelCorpus
+        SELECT * FROM parallelcorpus
         WHERE
         <if test="keywords != null">
             (chinese LIKE CONCAT('%', #{keywords}, '%') OR english LIKE CONCAT('%', #{keywords}, '%'))
         </if>
     </select>
     <delete id="deleteParallelCorpus" parameterType="int">
-        delete FROM parallelCorpus where id = #{id}
+        delete FROM parallelcorpus where id = #{id}
     </delete>
     <insert id="insertParallelCorpus" parameterType="com.example.translation.pojo.po.ParallelCorpus">
-        INSERT INTO parallelCorpus(chinese, english)
+        INSERT INTO parallelcorpus(chinese, english)
         VALUES(#{chinese}, #{english})
     </insert>
     <update id="updateParallelCorpus" parameterType="com.example.translation.pojo.po.ParallelCorpus">
-        UPDATE parallelCorpus
+        UPDATE parallelcorpus
         SET
             chinese = #{chinese},
             english = #{english}

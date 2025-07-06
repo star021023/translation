@@ -5,8 +5,6 @@ import com.example.translation.pojo.dto.RegisterDTO;
 import com.example.translation.pojo.po.SmsLogin;
 import com.example.translation.pojo.vo.UserVO;
 
-import java.util.Map;
-
 public interface UserService {
 
 

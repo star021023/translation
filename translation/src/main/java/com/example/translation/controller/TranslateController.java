@@ -1,8 +1,8 @@
 package com.example.translation.controller;
+
 import com.example.translation.common.result.ResultData;
 import com.example.translation.pojo.dto.DataChunk;
 import com.example.translation.pojo.dto.TranslateRequestDTO;
-
 import com.example.translation.service.TranslateService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;

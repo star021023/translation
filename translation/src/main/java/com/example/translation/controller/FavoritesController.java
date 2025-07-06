@@ -2,9 +2,7 @@ package com.example.translation.controller;
 
 import com.example.translation.pojo.po.Favorites;
 import com.example.translation.pojo.vo.FavoriteVO;
-import com.example.translation.pojo.vo.HistoryVO;
 import com.example.translation.service.FavoritesService;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 

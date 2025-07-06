@@ -21,6 +21,7 @@ import org.springframework.http.codec.ServerSentEvent;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import reactor.core.publisher.Flux;
+
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -149,11 +150,12 @@ public class UploadFileImpl implements UploadFile {
             // 保存文件
             Path filePath = Paths.get(imgDir, newFilename);
             multipartFile.transferTo(filePath);
-            String imgPath = imgDir+ "/" + newFilename;
+            String localImgPath = imgDir+ "/" + newFilename;
             ImgTranslDTO dto = new ImgTranslDTO();
             dto.setSourceLanguage(sourceLanguage);
             dto.setTargetLanguage(targetLanguage);
-            dto.setImgPath(imgPath);
+            dto.setLocalImgPath(localImgPath);
+            dto.setImgPath("http://localhost:5000/img/" + newFilename);
             return translateService.imgTranslate(dto);
 
         } catch (IOException e) {
@@ -183,8 +185,8 @@ public class UploadFileImpl implements UploadFile {
             ImgTranslDTO dto = new ImgTranslDTO();
             dto.setSourceLanguage(sourceLanguage);
             dto.setTargetLanguage(targetLanguage);
-            dto.setImgPath(docPath);
-            return translateService.docTranslate(dto);
+            dto.setLocalImgPath(docPath);
+            return translateService.docTranslate(dto,originalFilename);
         } catch (Exception  e) {
             return ResultData.fail(ReturnCode.RC999.getCode(), "文档处理失败: " + e.getMessage());
         }

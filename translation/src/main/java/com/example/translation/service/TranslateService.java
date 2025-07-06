@@ -16,7 +16,9 @@ public interface TranslateService {
     Flux<ServerSentEvent<DataChunk>> imgTranslate(ImgTranslDTO imgTranslDTO);
 
 
-    ResultData<String> docTranslate(ImgTranslDTO imgTranslDTO);
+
+
+    ResultData<String> docTranslate(ImgTranslDTO imgTranslDTO, String originalFilename);
 
     ResultData<String> blueScore(String reference, String candidate);
 

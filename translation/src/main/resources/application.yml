@@ -1,10 +1,9 @@
 server:
   port: 8080
-
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/translation?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
+    url: jdbc:mysql://127.0.0.1:3306/translation?serverTimezone=UTC&useUnicode=true&characterEncoding=utf-8&useSSL=false
     username: root
     password: yxy20021023qaz
   session:
@@ -13,7 +12,10 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
-
+  servlet:
+    multipart:
+      max-file-size: 10MB       # 单个文件最大大小
+      max-request-size: 10MB   # 整个请求最大大小
 
   data:
     redis:
@@ -41,13 +43,13 @@ jwt:
 
 aliyun:
   sms:
-    access-key-id: LTAI5tSNN6x7gECoN32pSTbZ
-    access-key-secret: 8tKXctOLUAg5DY5thHQknDFoF8vTsA
+    access-key-id:
+    access-key-secret:
   oss:
     file:
       endpoint: oss-cn-hangzhou.aliyuncs.com
-      keyid: LTAI5tFk9M5LJDCLYgJL82Dq
-      keysecret: eUiHCa8ccZSR0lGqFqgoyUBhR1jvkG
+      keyid:
+      keysecret:
       bucketname: yanxingyu
 
 file:
